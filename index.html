@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeu - Compter les clics</title>
+</head>
+
+<body>
+    <h1>Compter les clics !</h1>
+    <p id="timer">Temps restant: 10 s</p>
+    <p id="score">Votre Score: 0 clics</p>
+    <button id="btn">Cliquez</button>
+
+    <script>
+        const btn=document.getElementById('btn');
+        const scoreEl=document.getElementById('score');
+        const timerEl=document.getElementById('timer');
+        let running=false;
+        let score=0;
+        let timer;
+        let timeLeft=10;
+
+        btn.addEventListener('click',() => {
+
+            if (running==false){
+                running=true;
+                timer=setInterval(() => {
+                    timeLeft--;
+                    timerEl.textContent="Temps Restant: "+ timeLeft+" s";
+                    if (timeLeft<=0){
+                        clearInterval(timer);
+                        btn.disabled=true;
+                        
+                    };   
+                }, 1000);
+
+            };
+            if (running){
+                score++;
+                scoreEl.textContent="Votre Score: "+ score +" clics";
+            };
+        });
+    
+    </script>
+    
+</body>
+
+</html>
+
+  
