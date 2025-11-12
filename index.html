@@ -8,21 +8,43 @@
 
 <body>
     <h1>Compter les clics !</h1>
-    <p id="timer">Temps restant: 10 s</p>
+    <label for="gametime">Durée de la partie: </label>
+    <select id="gametime">
+        <option value="30">30s (Facile)</option>
+        <option value="20">20s (Moyen)</option>
+        <option value="10">10s (Difficile)</option>
+    </select>
+    <p id="timer">Temps Restant: 10s</p>
     <p id="score">Votre Score: 0 clics</p>
+    <p id="best">Votre Meilleur Score: 0 clics</p>
     <button id="btn">Cliquez</button>
+    <button id="restart">Restart</button>
 
     <script>
+        const bestEl=document.getElementById('best');
         const btn=document.getElementById('btn');
         const scoreEl=document.getElementById('score');
         const timerEl=document.getElementById('timer');
+        const restart=document.getElementById("restart");
+        const gameTimeSel=document.getElementById("gametime");
+
         let running=false;
         let score=0;
+        let bestScore= localStorage.getItem("bestScore") || 0;
+        bestEl.textContent= "Votre Meilleur Score: "+ bestScore +" clics"
         let timer;
-        let timeLeft=10;
+        let timeLeft=parseInt(gameTimeSel.value);
+
+
+        gameTimeSel.addEventListener('change', () => {
+            if (!running){
+                timeLeft=parseInt(gameTimeSel.value);
+                timerEl.textContent="Temps Restant: "+ timeLeft+" s";
+            };
+        });
+
 
         btn.addEventListener('click',() => {
-
             if (running==false){
                 running=true;
                 timer=setInterval(() => {
@@ -31,8 +53,15 @@
                     if (timeLeft<=0){
                         clearInterval(timer);
                         btn.disabled=true;
+                        running=false;
+                        if (score>bestScore){
+                            bestScore=score;
+                            localStorage.setItem("bestScore",bestScore);
+                            bestEl.textContent = "Votre Meilleur Score: " + bestScore + " clics";
+                        }
                         
-                    };   
+                        
+                    } 
                 }, 1000);
 
             };
@@ -40,6 +69,17 @@
                 score++;
                 scoreEl.textContent="Votre Score: "+ score +" clics";
             };
+        });
+
+
+        restart.addEventListener('click',() => {
+            clearInterval(timer);
+            running=false;
+            btn.disabled=false;
+            score=0;
+            timeLeft=parseInt(gameTimeSel.value);
+            timerEl.textContent="Temps Restant: "+ timeLeft +" s";
+            scoreEl.textContent="Votre Score: "+ score +" clics";
         });
     
     </script>
