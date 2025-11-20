@@ -7,21 +7,97 @@
 </head>
 
 <body>
+    <style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background: #f7f7f7;
+        padding: 20px;
+    }
+
+    h1 {
+        color: #333;
+    }
+
+    label, select {
+        font-size: 18px;
+    }
+
+    select {
+        padding: 5px 10px;
+        margin-bottom: 20px;
+    }
+
+    #timer, #score, #best {
+        font-size: 20px;
+        margin: 10px 0;
+    }
+
+    button {
+        padding: 10px 20px;
+        font-size: 18px;
+        margin: 10px;
+        cursor: pointer;
+        border: none;
+        background-color: #4CAF50;
+        color: white;
+        border-radius: 5px;
+        transition: 0.2s;
+    }
+
+    button:hover {
+        background-color: #45a049;
+    }
+
+    table {
+        margin: 20px auto;
+        border-collapse: collapse;
+        width: 300px;
+        font-size: 18px;
+        background: white;
+    }
+
+    th, td {
+        border: 1px solid #ccc;
+        padding: 10px;
+    }
+
+    th {
+        background-color: #eaeaea;
+    }
+    </style>
+
     <h1>Compter les clics !</h1>
     <label for="gametime">Durée de la partie: </label>
     <select id="gametime">
-        <option value="30">30s (Facile)</option>
-        <option value="20">20s (Moyen)</option>
-        <option value="10">10s (Difficile)</option>
+        <option value="30">30s</option>
+        <option value="20">20s</option>
+        <option value="10">10s</option>
     </select>
+    <table border="1">
+    <tr>
+    <th>Durée</th>
+    <th>Meilleur Score:</th>
+        </tr>
+        <tr>
+            <th>30s</th>
+            <th id="best30">0</th>
+        </tr>
+        <tr>
+            <th>20s</th>
+            <th id="best20">0</th>
+        </tr>
+        <tr>
+            <th>10s</th>
+            <th id="best10">0</th>
+        </tr>
+    </table>
     <p id="timer">Temps Restant: 10s</p>
     <p id="score">Votre Score: 0 clics</p>
-    <p id="best">Votre Meilleur Score: 0 clics</p>
     <button id="btn">Cliquez</button>
     <button id="restart">Restart</button>
 
     <script>
-        const bestEl=document.getElementById('best');
         const btn=document.getElementById('btn');
         const scoreEl=document.getElementById('score');
         const timerEl=document.getElementById('timer');
@@ -30,8 +106,14 @@
 
         let running=false;
         let score=0;
-        let bestScore= localStorage.getItem("bestScore") || 0;
-        bestEl.textContent= "Votre Meilleur Score: "+ bestScore +" clics"
+        let bestScores = {
+            30: localStorage.getItem("best30") || 0,
+            20: localStorage.getItem("best20") || 0,
+            10: localStorage.getItem("best10") || 0
+        };
+        document.getElementById("best30").textContent = bestScores[30];
+        document.getElementById("best20").textContent = bestScores[20];
+        document.getElementById("best10").textContent = bestScores[10];
         let timer;
         let timeLeft=parseInt(gameTimeSel.value);
 
@@ -54,13 +136,12 @@
                         clearInterval(timer);
                         btn.disabled=true;
                         running=false;
-                        if (score>bestScore){
-                            bestScore=score;
-                            localStorage.setItem("bestScore",bestScore);
-                            bestEl.textContent = "Votre Meilleur Score: " + bestScore + " clics";
+                        let gameDuration = parseInt(gameTimeSel.value);
+                        if (score > bestScores[gameDuration]) {
+                            bestScores[gameDuration] = score;
+                            localStorage.setItem("best" + gameDuration, score);
+                            document.getElementById("best" + gameDuration).textContent = score;
                         }
-                        
-                        
                     } 
                 }, 1000);
 
