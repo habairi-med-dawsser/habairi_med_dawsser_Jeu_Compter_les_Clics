@@ -1,172 +1,348 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jeu - Compter les clics</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Jeu - Compter les clics</title>
+	<style>
+		/* =============================================================
+		   STYLES GÉNÉRAUX
+		   ============================================================= */
+		body {
+			font-family: Arial, sans-serif; /* Police*/
+			text-align: center; /* Centrer tout le contenu */
+			background: #f7f7f7; /* Couleur de fond */
+			padding: 20px; /* Marge intérieure autour du contenu */
+		}
+		
+		/* Style et animation du titre H1 */
+		h1 {
+			color: #333;
+			animation: fadeIn 1s ease; /* Applique l'animation 'fadeIn' */
+		}
+		
+		/* Définition de l'animation pour l'apparition du titre */
+		@keyframes fadeIn {
+			from { opacity: 0; transform: translateY(-20px); } /* Commence invisible et un peu au-dessus */
+			to { opacity: 1; transform: translateY(0); } /* Termine visible à sa position normale */
+		}
+		
+		/* Styles des éléments de formulaire */
+		label, select { font-size: 18px; }
+		select { 
+			padding: 5px 10px; 
+			margin-bottom: 20px; 
+		}
+		
+		/* Styles des indicateurs d'état (Temps, Score, Meilleurs Scores) */
+		#timer { 
+			font-size: 20px; 
+			margin: 10px 0; 
+			transition: color 0.3s, transform 0.3s; /* Transition pour les changements d'état */
+		}
+
+		/* =============================================================
+		   STYLES DES EFFETS D'AVERTISSEMENT
+		   ============================================================= */
+		
+		/* Classe appliquée au minuteur lorsque le temps est presque écoulé */
+		.timer-warning {
+			color: red !important; /* Couleur rouge pour l'alerte */
+			font-weight: bold;
+			animation: blinker 0.5s linear infinite alternate; /* Applique l'animation de clignotement */
+		}
+		
+		/* Définition de l'animation de clignotement */
+		@keyframes blinker {
+			from { opacity: 1.0; } /* État bien visible */
+			to { opacity: 0.5; } /* État semi-transparent */
+		}
+
+		/* Styles de base pour le score et les meilleurs scores */
+		#score, #best { 
+			font-size: 20px; 
+			margin: 10px 0; 
+			transition: color 0.3s; 
+		}
+
+		/* Classes de couleur dynamique pour le score */
+		.score-good { color: #008000; } /* Vert (Bon temps restant) */
+		.score-mid { color: #FFA500; } /* Orange (Temps moyen) */
+		.score-low { color: #333; } /* Noir (Début de partie) */
+
+		/* =============================================================
+		   STYLES DES BOUTONS
+		   ============================================================= */
+		button {
+			padding: 10px 20px;
+			font-size: 18px;
+			margin: 10px;
+			cursor: pointer;
+			border: none;
+			background-color: #4CAF50; /* Vert par défaut */
+			color: white;
+			border-radius: 5px;
+			/* Transitions pour une expérience utilisateur fluide */
+			transition: transform 0.1s, background-color 0.2s, box-shadow 0.2s;
+		}
+		
+		/* Effet au survol de la souris */
+		button:hover {
+			background-color: #45a049; /* Vert legèrement plus foncé */
+			box-shadow: 0 4px 10px rgba(0,0,0,0.2); /* Ombre */
+		}
+		
+		/* Effet au clic du bouton */
+		button:active { 
+			transform: scale(0.95); /* Reduit legerement le bouton pour simuler l'enfoncement */
+		}
+		
+		/* =============================================================
+		   STYLES DU TABLEAU DES SCORES
+		   ============================================================= */
+		table {
+			margin: 20px auto; /* Centre le tableau horizontalement */
+			border-collapse: collapse;
+			width: 300px;
+			font-size: 18px;
+			background: white;
+		}
+		th, td { 
+			border: 1px solid #ccc; 
+			padding: 10px; 
+		}
+		th { 
+			background-color: #eaeaea; 
+		}
+		
+		/* =============================================================
+		   STYLES D'ANIMATION DU SCORE (PULSATION)
+		   ============================================================= */
+		
+		/* Classe pour déclencher l'animation de pulsation */
+		.score-pulse {
+			animation: pulse 0.3s ease;
+		}
+		
+		/* Définition de l'animation de pulsation */
+		@keyframes pulse {
+			0% { transform: scale(1); }
+			50% { transform: scale(1.1); } /* Grossit de 10% */
+			100% { transform: scale(1); } /* Revient à la taille normale */
+		}
+	</style>
 </head>
-
 <body>
-    <style>
-    body {
-        font-family: Arial, sans-serif;
-        text-align: center;
-        background: #f7f7f7;
-        padding: 20px;
-    }
+	<h1>Compter les clics !</h1>
+	<label for="gametime">Durée de la partie: </label>
+	<select id="gametime">
+		<option value="30">30s</option>
+		<option value="20">20s</option>
+		<option value="10">10s</option>
+	</select>
+	<table border="1">
+		<tr><th>Durée</th><th>Meilleur Score:</th></tr>
+		<tr><th>30s</th><th id="best30">0</th></tr>
+		<tr><th>20s</th><th id="best20">0</th></tr>
+		<tr><th>10s</th><th id="best10">0</th></tr>
+	</table>
+	<p id="timer">Temps Restant: 30s</p>
+	<p id="score">Votre Score: 0 clics</p>
+	<button id="btn">Cliquez</button>
+	<button id="restart">Rejouer</button>
 
-    h1 {
-        color: #333;
-    }
+	<audio id="clickSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg" preload="auto"></audio> 
+	<audio id="endSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
 
-    label, select {
-        font-size: 18px;
-    }
+	<script>
+    // =============================================================
+    // I. DÉCLARATION DES VARIABLES ET CONSTANTES
+    // =============================================================
+    const btn = document.getElementById('btn');
+    const scoreEl = document.getElementById('score');
+    const timerEl = document.getElementById('timer');
+    const restart = document.getElementById("restart");
+    const gameTimeSel = document.getElementById("gametime");
+    const clickSound = document.getElementById("clickSound");
+    const endSound = document.getElementById("endSound");
+    const TEMPS_AVERTISSEMENT = 5; 
 
-    select {
-        padding: 5px 10px;
-        margin-bottom: 20px;
-    }
+    let running = false; 
+    let score = 0;
+    let bestScores = {
+        30: localStorage.getItem("best30") || 0,
+        20: localStorage.getItem("best20") || 0,
+        10: localStorage.getItem("best10") || 0
+    };
+    let timer; 
+    let timeLeft = parseInt(gameTimeSel.value); 
+    let gameDuration = timeLeft; 
 
-    #timer, #score, #best {
-        font-size: 20px;
-        margin: 10px 0;
-    }
 
-    button {
-        padding: 10px 20px;
-        font-size: 18px;
-        margin: 10px;
-        cursor: pointer;
-        border: none;
-        background-color: #4CAF50;
-        color: white;
-        border-radius: 5px;
-        transition: 0.2s;
-    }
+    // =============================================================
+    // II. FONCTIONS DU JEU
+    // =============================================================
 
-    button:hover {
-        background-color: #45a049;
-    }
-
-    table {
-        margin: 20px auto;
-        border-collapse: collapse;
-        width: 300px;
-        font-size: 18px;
-        background: white;
-    }
-
-    th, td {
-        border: 1px solid #ccc;
-        padding: 10px;
-    }
-
-    th {
-        background-color: #eaeaea;
-    }
-    </style>
-
-    <h1>Compter les clics !</h1>
-    <label for="gametime">Durée de la partie: </label>
-    <select id="gametime">
-        <option value="30">30s</option>
-        <option value="20">20s</option>
-        <option value="10">10s</option>
-    </select>
-    <table border="1">
-    <tr>
-    <th>Durée</th>
-    <th>Meilleur Score:</th>
-        </tr>
-        <tr>
-            <th>30s</th>
-            <th id="best30">0</th>
-        </tr>
-        <tr>
-            <th>20s</th>
-            <th id="best20">0</th>
-        </tr>
-        <tr>
-            <th>10s</th>
-            <th id="best10">0</th>
-        </tr>
-    </table>
-    <p id="timer">Temps Restant: 10s</p>
-    <p id="score">Votre Score: 0 clics</p>
-    <button id="btn">Cliquez</button>
-    <button id="restart">Restart</button>
-
-    <script>
-        const btn=document.getElementById('btn');
-        const scoreEl=document.getElementById('score');
-        const timerEl=document.getElementById('timer');
-        const restart=document.getElementById("restart");
-        const gameTimeSel=document.getElementById("gametime");
-
-        let running=false;
-        let score=0;
-        let bestScores = {
-            30: localStorage.getItem("best30") || 0,
-            20: localStorage.getItem("best20") || 0,
-            10: localStorage.getItem("best10") || 0
-        };
+    /**
+     * @function initialiserMeilleursScores
+     * Met à jour l'affichage des meilleurs scores au chargement de la page.
+     */
+    function initialiserMeilleursScores() {
         document.getElementById("best30").textContent = bestScores[30];
         document.getElementById("best20").textContent = bestScores[20];
         document.getElementById("best10").textContent = bestScores[10];
-        let timer;
-        let timeLeft=parseInt(gameTimeSel.value);
+    }
 
+    /**
+     * @function mettreAJourScoreEtEffets
+     * Incrémente le score, met à jour l'affichage et applique les effets visuels (pulsation et couleur).
+     */
+    function mettreAJourScoreEtEffets() {
+        score++;
+        scoreEl.textContent = "Votre Score: " + score + " clics";
+        
+        // Animation de pulsation du score
+        scoreEl.classList.remove("score-pulse");
+        void scoreEl.offsetWidth; // Force le reflow pour redémarrer l'animation
+        scoreEl.classList.add("score-pulse");
+        
+        // NOUVELLE LOGIQUE : Changement de couleur basé sur le ratio de performance (Score / Meilleur Score)
+        const bestScoreActuel = bestScores[gameDuration];
+        
+        // Pour éviter la division par zéro si aucun score n'est encore enregistré (bestScoreActuel = 0)
+        if (bestScoreActuel > 0) {
+            const ratioPerformance = score / bestScoreActuel;
+            scoreEl.classList.remove("score-good", "score-mid", "score-low");
 
-        gameTimeSel.addEventListener('change', () => {
-            if (!running){
-                timeLeft=parseInt(gameTimeSel.value);
-                timerEl.textContent="Temps Restant: "+ timeLeft+" s";
-            };
-        });
+            if (ratioPerformance >= 0.85) {
+                scoreEl.classList.add("score-good"); // Vert (Très bien !)
+            } else if (ratioPerformance >= 0.5) {
+                scoreEl.classList.add("score-mid"); // Orange (Moyen)
+            } else {
+                scoreEl.classList.add("score-low"); // Gris/Noir (Faible)
+            }
+        } else {
+            // Si c'est la première partie, on utilise la couleur par défaut
+            scoreEl.classList.remove("score-good", "score-mid");
+            scoreEl.classList.add("score-low");
+        }
+    }
 
+    /**
+     * @function gererMinuteur
+     * S'exécute chaque seconde, met à jour le temps, l'avertissement et vérifie la fin de partie.
+     */
+    function gererMinuteur() {
+        timeLeft--;
+        timerEl.textContent = "Temps Restant: " + timeLeft + " s";
+        
+        // Gère l'effet d'avertissement clignotant
+        if (timeLeft <= TEMPS_AVERTISSEMENT && timeLeft > 0) {
+            timerEl.classList.add("timer-warning");
+        } else {
+            timerEl.classList.remove("timer-warning");
+        }
 
-        btn.addEventListener('click',() => {
-            if (running==false){
-                running=true;
-                timer=setInterval(() => {
-                    timeLeft--;
-                    timerEl.textContent="Temps Restant: "+ timeLeft+" s";
-                    if (timeLeft<=0){
-                        clearInterval(timer);
-                        btn.disabled=true;
-                        running=false;
-                        let gameDuration = parseInt(gameTimeSel.value);
-                        if (score > bestScores[gameDuration]) {
-                            bestScores[gameDuration] = score;
-                            localStorage.setItem("best" + gameDuration, score);
-                            document.getElementById("best" + gameDuration).textContent = score;
-                        }
-                    } 
-                }, 1000);
+        if (timeLeft <= 0) {
+            terminerPartie();
+        }
+    }
 
-            };
-            if (running){
-                score++;
-                scoreEl.textContent="Votre Score: "+ score +" clics";
-            };
-        });
+    /**
+     * @function demarrerPartie
+     * Initialise la partie et lance le compte à rebours.
+     */
+    function demarrerPartie() {
+        running = true;
+        gameDuration = parseInt(gameTimeSel.value); // Fixe la durée de la partie
+        timer = setInterval(gererMinuteur, 1000);
+    }
 
+    /**
+     * @function terminerPartie
+     * Arrête le jeu, désactive le bouton et enregistre le meilleur score.
+     */
+    function terminerPartie() {
+        clearInterval(timer);
+        btn.disabled = true;
+        running = false;
+        endSound.play();
+        timerEl.classList.remove("timer-warning"); 
+        
+        const finalGameDuration = parseInt(gameTimeSel.value); 
+        
+        // Vérification et enregistrement du meilleur score
+        if (score > bestScores[finalGameDuration]) {
+            bestScores[finalGameDuration] = score;
+            localStorage.setItem("best" + finalGameDuration, score);
+            document.getElementById("best" + finalGameDuration).textContent = score;
+        }
+    }
 
-        restart.addEventListener('click',() => {
-            clearInterval(timer);
-            running=false;
-            btn.disabled=false;
-            score=0;
-            timeLeft=parseInt(gameTimeSel.value);
-            timerEl.textContent="Temps Restant: "+ timeLeft +" s";
-            scoreEl.textContent="Votre Score: "+ score +" clics";
-        });
-    
-    </script>
-    
+    /**
+     * @function reinitialiserJeu
+     * Réinitialise toutes les variables et l'affichage pour une nouvelle partie.
+     */
+    function reinitialiserJeu() {
+        clearInterval(timer);
+        running = false;
+        btn.disabled = false;
+        score = 0;
+        
+        // Récupère la durée actuelle pour la réinitialisation
+        timeLeft = parseInt(gameTimeSel.value);
+        gameDuration = timeLeft;
+        
+        // Mise à jour de l'affichage
+        timerEl.textContent = "Temps Restant: " + timeLeft + " s";
+        scoreEl.textContent = "Votre Score: " + score + " clics";
+        
+        // Nettoyage des effets visuels
+        timerEl.classList.remove("timer-warning");
+        scoreEl.classList.remove("score-good", "score-mid", "score-low");
+    }
+
+    // =============================================================
+    // III. GESTION DES ÉVÉNEMENTS
+    // =============================================================
+
+    // 1. Initialisation de l'affichage au chargement
+    initialiserMeilleursScores();
+
+    // 2. Événement de changement de durée
+    gameTimeSel.addEventListener('change', () => {
+        // Permet de changer la durée uniquement si le jeu n'est pas en cours
+        if (!running){
+            timeLeft = parseInt(gameTimeSel.value);
+            gameDuration = timeLeft;
+            timerEl.textContent = "Temps Restant: "+ timeLeft +" s";
+            
+            // Mise à jour de la couleur pour la nouvelle durée (basée sur le score 0)
+            scoreEl.classList.remove("score-good", "score-mid");
+            scoreEl.classList.add("score-low");
+        }
+    });
+
+    // 3. Événement de clic sur le bouton principal
+    btn.addEventListener('click', () => {
+        // Joue le son de clic et le réinitialise
+        clickSound.currentTime = 0;
+        clickSound.play();
+        
+        // Si le jeu n'est pas lancé, le démarrer
+        if (!running){
+            demarrerPartie();
+        }
+        
+        // Si le jeu est en cours, mettre à jour le score
+        if (running){
+            mettreAJourScoreEtEffets();
+        }
+    });
+
+    // 4. Événement de clic sur le bouton Rejouer
+    restart.addEventListener('click', reinitialiserJeu);
+</script>
+
 </body>
-
 </html>
-
-  
