@@ -298,6 +298,16 @@
     left: 30px; /* distance du bord gauche */
     animation: floatInfo 2s ease-in-out infinite alternate;
 	}
+    @media (max-width: 600px) {
+        #game-info {
+            position: static;   /* enlève le positionnement forcé */
+            margin: 20px auto;  /* centre le bloc */
+            width: 90%;         /* pour qu’il prenne bien sa place */
+            animation: none;    /* optionnel : évite que ça flotte sur mobile */
+        }
+    }
+
+
 
 
 	@keyframes floatInfo {
